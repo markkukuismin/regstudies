@@ -60,9 +60,9 @@ sum_stay_length <- function(.data, user_data, idnum,
     
     .data[ , hospday] <- 0 # create new column
     
-    ind1 <- .data %>% dplyr::pull(rlang::quo_name(rlang::enquo(idnum))) 
+    ind1 <- .data %>% dplyr::pull({{idnum}}) 
     
-    ind2 <- tmp.2 %>% dplyr::pull(rlang::quo_name(rlang::enquo(idnum)))
+    ind2 <- tmp.2 %>% dplyr::pull({{idnum}})
     
     .data[ind1 %in% ind2, hospday] <- 1 # value 1 for persons whose condition (*) is fulfilled...
     
