@@ -36,7 +36,7 @@ sum_stay_length <- function(.data, user_data, idnum,
   
   
   tmp <- user_data %>%
-    dplyr::inner_join(.data, by = rlang::quo_name(rlang::enquo(a)))
+    dplyr::inner_join(.data, by = rlang::quo_name(rlang::enquo(idnum)))
   
   # Difference in days,
   
