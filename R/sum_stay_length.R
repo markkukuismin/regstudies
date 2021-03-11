@@ -33,48 +33,46 @@ sum_stay_length <- function(.data, user_data, idnum,
                             ongoing_end_time = 90
                             ){
   
-  
-  
   tmp <- user_data %>%
     dplyr::inner_join(.data, by = rlang::quo_name(rlang::enquo(idnum)))
+	
+  adm_date <- rlang::quo_name(rlang::enquo(adm_date))
   
-  # Difference in days,
+  disc_date <- rlang::quo_name(rlang::enquo(disc_date))
   
-  tmp <- dplyr::mutate(tmp, rel_adm = as.numeric({{adm_date}} - {{index_date}}),
-                  rel_dis = as.numeric({{disc_date}} - {{index_date}}))
+  index_date <- rlang::quo_name(rlang::enquo(index_date))
+  
+  tmp <- dplyr::mutate(tmp, rel_adm = as.numeric(adm_date - index_date),
+                  rel_dis = as.numeric(disc_date - index_date))
   
   tmp <- tmp %>% 
     dplyr::mutate(
-      rel_adm = dplyr::if_else(rel_adm < -wolen, -wolen, rel_adm) # admission days before the index day
+      rel_adm = dplyr::if_else(rel_adm < -wolen, -wolen, rel_adm)
     )
   
   tmp <- tmp %>% dplyr::mutate(
-    rel_dis = dplyr::if_else(rel_dis > 0, 0, rel_dis) # discharge days after the index day
+    rel_dis = dplyr::if_else(rel_dis > 0, 0, rel_dis)
   )
   
   tmp <- tmp %>% dplyr::select({{idnum}}, rel_dis, rel_adm)
   
   for(day in 1:wolen){
     
-    tmp.2 <- tmp %>% dplyr::filter(rel_dis >= day - wolen - 1, rel_adm <= day - wolen - 1) #(*) pick only persons when condition true
+    tmp.2 <- tmp %>% dplyr::filter(rel_dis >= day - wolen - 1, rel_adm <= day - wolen - 1)
     
     hospday <- paste0("hday", day)
     
-    .data[ , hospday] <- 0 # create new column
+    .data[ , hospday] <- 0
     
     ind1 <- .data %>% dplyr::pull({{idnum}}) 
     
     ind2 <- tmp.2 %>% dplyr::pull({{idnum}})
     
-    .data[ind1 %in% ind2, hospday] <- 1 # value 1 for persons whose condition (*) is fulfilled...
+    .data[ind1 %in% ind2, hospday] <- 1
     
   }
   
-  # compute the time a person was hospitalized during the washout period,
-  
   .data$wo_total_time_hosp <- rowSums(.data %>% dplyr::select(tidyr::contains("hday"))) 
-
-  # compute the time a person was hospitalized at the end of the washout period,
   
   ongoing_end_days <- paste0("hday", (wolen - ongoing_end_time + 1):wolen)
     
