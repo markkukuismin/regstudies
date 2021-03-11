@@ -40,12 +40,15 @@ Can be used for filtering hospitilazations during the wash-out period. The funct
 }
 \examples{
 \dontrun{
-d <- regstudies::sample_cohort \%>\% sum_stay_length(., regstudies::sample_regdata, idnum = personid, 
-                                                    adm_date = adm_date, 
-                                                    disc_date = disc_date,
-                                                    index_date = postingdate,
-                                                    wolen = 365,
-                                                    ongoing_end_time = 90)
+Df <- regstudies::sample_regdata \%>\% dplyr::left_join(sample_cohort \%>\% select(personid, postingdate), by="personid")
+
+d <- Df \%>\% regstudies::sum_stay_length(., regstudies::sample_cohort,
+                                        idnum = personid,
+                                        adm_date = adm_date, 
+                                        disc_date = disc_date, 
+                                        index_date = postingdate, 
+                                        wolen = 2*365, 
+                                       ongoing_end_time = 60)
 }
 
 }
