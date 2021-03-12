@@ -36,7 +36,7 @@ sum_stay_length(
 returns the `.data` tibble extended with two columns: `wo_total_time_hosp` which is the total number of days in hospital during the washout period, and `wo_end_time_hosp` which is the number of days in the hospital at the end of the washout period.
 }
 \description{
-Can be used for filtering hospitilazations during the wash-out period. The function extends the original data `.data` with a column describing the days in-hospital care during the washout-period.
+Can be used for filtering hospitalizations during the wash-out period. The function extends the original data `.data` with a column describing the days in-hospital care during the washout-period.
 }
 \examples{
 \dontrun{
