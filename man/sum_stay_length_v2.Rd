@@ -11,8 +11,8 @@ sum_stay_length_v2(
   adm_date,
   disc_date,
   index_date,
-  wolen,
-  ongoing_end_time
+  wolen = 365,
+  ongoing_end_time = 90
 )
 }
 \arguments{
