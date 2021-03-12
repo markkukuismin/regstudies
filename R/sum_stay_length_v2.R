@@ -29,7 +29,7 @@
 sum_stay_length_v2 <- function(.data, user_data, 
                                idnum,  
                                adm_date, disc_date, index_date,
-                               wolen, ongoing_end_time){
+                               wolen = 365, ongoing_end_time = 90){
   
   user_data <- user_data %>% dplyr::left_join(.data, by = rlang::quo_name(rlang::enquo(idnum)))
   
