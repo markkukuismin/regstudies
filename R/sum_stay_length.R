@@ -1,6 +1,6 @@
 #' Count the days in in-hospital care from the start of the washout period.
 #'
-#' Can be used for filtering hospitilazations during the wash-out period. The function extends the original data `.data` with a column describing the days in-hospital care during the washout-period.
+#' Can be used for filtering hospitalizations during the wash-out period. The function extends the original data `.data` with a column describing the days in-hospital care during the washout-period.
 #' @param .data cohort data containing at least id-numbers and index days
 #' @param user_data register data
 #' @param idnum name of the column/variable holding the person IDs
@@ -15,7 +15,8 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' Df <- regstudies::sample_regdata %>% dplyr::left_join(sample_cohort %>% select(personid, postingdate), by="personid")
+#' Df <- regstudies::sample_regdata %>% 
+#'   dplyr::left_join(sample_cohort %>% select(personid, postingdate), by="personid")
 #'
 #' d <- Df %>% regstudies::sum_stay_length(., regstudies::sample_cohort,
 #'                                         idnum = personid,
