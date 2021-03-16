@@ -15,16 +15,12 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' Df <- regstudies::sample_regdata %>% 
-#'   dplyr::left_join(sample_cohort %>% select(personid, postingdate), by="personid")
-#'
-#' d <- Df %>% regstudies::sum_stay_length(., regstudies::sample_cohort,
-#'                                         idnum = personid,
-#'                                         adm_date = adm_date, 
-#'                                         disc_date = disc_date, 
-#'                                         index_date = postingdate, 
-#'                                         wolen = 2*365, 
- #'                                        ongoing_end_time = 60)
+#' d <- regstudies::sample_cohort %>% sum_stay_length(., regstudies::sample_regdata, idnum = personid, 
+#'                                                     adm_date = adm_date, 
+#'                                                     disc_date = disc_date,
+#'                                                     index_date = postingdate,
+#'                                                     wolen = 365,
+#'                                                     ongoing_end_time = 90)
 #' }
 #'
 #' @export
@@ -37,44 +33,48 @@ sum_stay_length <- function(.data, user_data, idnum,
                             ongoing_end_time = 90
                             ){
   
-  .data <- dplyr::mutate(.data, rel_adm = as.numeric({{adm_date}} - {{index_date}}),
+  tmp <- user_data %>%
+    dplyr::left_join(.data)
+  
+  tmp <- dplyr::mutate(tmp, rel_adm = as.numeric({{adm_date}} - {{index_date}}),
                   rel_dis = as.numeric({{disc_date}} - {{index_date}}))
   
-  .data <- .data %>% 
+  tmp <- tmp %>% 
     dplyr::mutate(
       rel_adm = dplyr::if_else(rel_adm < -wolen, -wolen, rel_adm)
     )
   
-  .data <- .data %>% dplyr::mutate(
-    rel_dis = dplyr::if_else(rel_dis > 0, 0, rel_dis)
-  )
+  tmp <- tmp %>% 
+    dplyr::mutate(
+      rel_dis = dplyr::if_else(rel_dis > 0, 0, rel_dis)
+    )
   
-  .data <- .data %>% dplyr::select({{idnum}}, rel_dis, rel_adm)
-  
-  ind1 <- user_data %>% dplyr::pull({{idnum}}) 
+  tmp <- tmp %>% dplyr::select({{idnum}}, rel_dis, rel_adm)
   
   for(day in 1:wolen){
     
-    tmp <- .data %>% dplyr::filter(rel_dis >= day - wolen - 1, rel_adm <= day - wolen - 1)
-	
-	ind2 <- tmp %>% dplyr::pull({{idnum}})
+    tmp.2 <- tmp %>% dplyr::filter(rel_dis >= day - wolen - 1, rel_adm <= day - wolen - 1)
     
     hospday <- paste0("hday", day)
     
-    user_data[ , hospday] <- 0
+    .data[, hospday] <- 0
     
-    user_data[ind1 %in% ind2, hospday] <- 1
+    ind1 <- .data %>% dplyr::pull({{idnum}}) 
+    
+    ind2 <- tmp.2 %>% dplyr::pull({{idnum}})
+    
+    .data[ind1 %in% ind2, hospday] <- 1
     
   }
   
-  user_data$wo_total_time_hosp <- rowSums(user_data %>% dplyr::select(tidyr::contains("hday"))) 
+  .data$wo_total_time_hosp <- rowSums(.data %>% dplyr::select(tidyr::contains("hday"))) 
   
   ongoing_end_days <- paste0("hday", (wolen - ongoing_end_time + 1):wolen)
     
-  user_data$wo_end_time_hosp <- rowSums(user_data %>% dplyr::select(tidyr::contains(ongoing_end_days)))
+  .data$wo_end_time_hosp <- rowSums(.data %>% dplyr::select(tidyr::contains(ongoing_end_days)))
   
-  user_data <- user_data %>% dplyr::select(-contains("hday"))
+  .data <- .data %>% dplyr::select(-contains("hday"))
   
-  return(user_data)
+  return(.data)
   
 }
