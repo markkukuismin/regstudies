@@ -37,7 +37,7 @@ make_indicators(
 
 \item{codes}{name of the variable holding ICD, SII, ATC etc. -codes}
 
-\item{diag_tbl}{name of the `regstudies` classification one wants to apply. It can be either `charlson` or `elixhauser`. Alternatively one can use a tibble which holds the classification details}
+\item{diag_tbl}{name of the \code{regstudies} classification one wants to apply. It can be either \code{charlson} or \code{elixhauser}. Alternatively one can use a tibble which holds the classification details}
 
 \item{add_zero_class}{a logical value indicating whether diseases with zero frequencies should be added to the data. Default is TRUE}
 }

@@ -28,31 +28,24 @@ sum_stay_length(
 
 \item{index_date}{the name of the variable which is the reference point around which to search}
 
-\item{wolen}{washout length in days. Default is one year, `365`}
+\item{wolen}{washout length in days. Default is one year, \code{365}}
 
-\item{ongoing_end_time}{the time (days) persons were hospitalized at the end of the washout period. Default is three months, `90`}
+\item{ongoing_end_time}{the time (days) persons were hospitalized at the end of the washout period. Default is three months, \code{90}}
 }
 \value{
-returns the `.data` tibble extended with two columns: `wo_total_time_hosp` which is the total number of days in hospital during the washout period, and `wo_end_time_hosp` which is the number of days in the hospital at the end of the washout period.
+returns the \code{.data} tibble extended with two columns: \code{wo_total_time_hosp} which is the total number of days in hospital during the washout period, and \code{wo_end_time_hosp} which is the number of days in the hospital at the end of the washout period.
 }
 \description{
-Can be used for filtering hospitalizations during the wash-out period. The function extends the original data `.data` with a column describing the days in-hospital care during the washout-period.
+Can be used for filtering hospitalizations during the wash-out period. The function extends the original data \code{.data} with a column describing the days in-hospital care during the washout-period.
 }
 \examples{
 \dontrun{
-Df <- regstudies::sample_regdata \%>\% 
-  dplyr::left_join(sample_cohort \%>\% select(personid, postingdate), by="personid")
-
-d <- Df \%>\% regstudies::sum_stay_length(., regstudies::sample_cohort,
-                                        idnum = personid,
-                                        adm_date = adm_date, 
-                                        disc_date = disc_date, 
-                                        index_date = postingdate, 
-                                        wolen = 2*365, 
-                                       ongoing_end_time = 60)
+d <- regstudies::sample_cohort \%>\% sum_stay_length(., regstudies::sample_regdata, idnum = personid, 
+                                                    adm_date = adm_date, 
+                                                    disc_date = disc_date,
+                                                    index_date = postingdate,
+                                                    wolen = 365,
+                                                    ongoing_end_time = 90)
 }
 
 }
-\keyword{dplyr,}
-\keyword{regstudies,}
-\keyword{tidyr}
