@@ -28,15 +28,15 @@ sum_stay_length_v2(
 
 \item{index_date}{the name of the variable which is the reference point around which to search}
 
-\item{wolen}{washout length in days. Default is one year, `365`}
+\item{wolen}{washout length in days. Default is one year, \code{365}}
 
-\item{ongoing_end_time}{the time (days) persons were hospitalized at the end of the washout period. Default is three months, `90`}
+\item{ongoing_end_time}{the time (days) persons were hospitalized at the end of the washout period. Default is three months, \code{90}}
 }
 \value{
-returns the `.data` tibble extended with three columns: `wo_total_days` which is the total number of days in hospital during the washout period, `wo_end_days` which is the number of days in the hospital at the end of the washout period, and `total_days` which is the total number of days in hospital care.
+returns the \code{.data} tibble extended with three columns: \code{wo_total_days} which is the total number of days in hospital during the washout period, \code{wo_end_days} which is the number of days in the hospital at the end of the washout period, and \code{total_days} which is the total number of days in hospital care.
 }
 \description{
-Can be used for filtering hospitalizations during the wash-out period. The function extends the original data `.data` with a column describing the days in-hospital care during the washout-period, at the end of it and total number of days the person has been in hospital care.
+Can be used for filtering hospitalizations during the wash-out period. The function extends the original data \code{.data} with a column describing the days in-hospital care during the washout-period, at the end of it and total number of days the person has been in hospital care.
 }
 \examples{
 \dontrun{
@@ -50,7 +50,3 @@ d <- regstudies::sample_cohort \%>\% sum_stay_length_v2(., user_data = regstudie
 }
 
 }
-\keyword{dplyr,}
-\keyword{lubridate,}
-\keyword{regstudies,}
-\keyword{tidyr}
