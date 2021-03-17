@@ -42,11 +42,11 @@
 #'   ) 
 #' }
 #'
-#' @export
+#' @rdname  regdata_pivot_longer
 #'
 #' @author Markku Kuismin, Juho Kopra, Jani Miettinen, Reijo Sund
+#' @export
 #'
-
 regdata_pivot_longer = function(.data, idnum, diag_tbl = NULL){
   
   idnum <- rlang::quo_name(rlang::enquo(idnum))

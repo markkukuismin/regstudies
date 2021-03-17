@@ -33,6 +33,8 @@
 #' }
 #'
 #' @rdname sum_stay_length_v2
+#' 
+#' @author Markku Kuismin, Juho Kopra, Jani Miettinen, Reijo Sund
 #' @export
 #'
 sum_stay_length_v2 <- function(.data, user_data, 
