@@ -49,3 +49,6 @@ d <- regstudies::sample_cohort \%>\% sum_stay_length(., regstudies::sample_regda
 }
 
 }
+\author{
+Markku Kuismin, Juho Kopra, Jani Miettinen, Reijo Sund
+}

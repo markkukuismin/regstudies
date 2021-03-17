@@ -46,6 +46,7 @@
 #' 
 #' @rdname make_indicators
 #'
+#' @author Markku Kuismin, Juho Kopra, Jani Miettinen, Reijo Sund
 #' @export
 #'
 make_indicators <- function(cohort_data, reg_data, 

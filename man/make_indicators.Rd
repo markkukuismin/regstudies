@@ -60,3 +60,6 @@ d <- make_indicators(cohort_data = regstudies::sample_cohort,
 }
 
 }
+\author{
+Markku Kuismin, Juho Kopra, Jani Miettinen, Reijo Sund
+}

@@ -51,3 +51,6 @@ sum_stay_length_v2(., user_data = regstudies::sample_regdata,
 }
 
 }
+\author{
+Markku Kuismin, Juho Kopra, Jani Miettinen, Reijo Sund
+}
