@@ -40,13 +40,14 @@ Can be used for filtering hospitalizations during the wash-out period. The funct
 }
 \examples{
 \dontrun{
-d <- regstudies::sample_cohort \%>\% sum_stay_length_v2(., user_data = regstudies::sample_regdata, 
-                                                      idnum = personid, 
-                                                      adm_date = adm_date, 
-                                                      disc_date = disc_date,
-                                                      index_date = postingdate,
-                                                      wolen = 365,
-                                                      ongoing_end_time = 90)
+d <- regstudies::sample_cohort \%>\% 
+sum_stay_length_v2(., user_data = regstudies::sample_regdata, 
+                   idnum = personid, 
+                   adm_date = adm_date, 
+                   disc_date = disc_date,
+                   index_date = postingdate,
+                   wolen = 365,
+                   ongoing_end_time = 90)
 }
 
 }
