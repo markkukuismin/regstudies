@@ -9,10 +9,15 @@
 #' @param index_date the name of the variable which is the reference point around which to search
 #' @param wolen washout length in days. Default is one year, `365`
 #' @param ongoing_end_time the time (days) persons were hospitalized at the end of the washout period. Default is three months, `90`
+#' 
 #' @return returns the `.data` tibble extended with two columns: `wo_total_time_hosp` which is the total number of days in hospital during the washout period, and `wo_end_time_hosp` which is the number of days in the hospital at the end of the washout period.
 #' 
-#' @keywords regstudies, dplyr, tidyr
-#' @export
+#' @importFrom dplyr mutate 
+#' @importFrom dplyr select
+#' @importFrom dplyr pull
+#' @importFrom dplyr filter
+#' @importFrom dplyr if_else
+#' 
 #' @examples
 #' \dontrun{
 #' d <- regstudies::sample_cohort %>% sum_stay_length(., regstudies::sample_regdata, idnum = personid, 
@@ -22,7 +27,8 @@
 #'                                                     wolen = 365,
 #'                                                     ongoing_end_time = 90)
 #' }
-#'
+#' 
+#' @rdname sum_stay_length
 #' @export
 #'
 sum_stay_length <- function(.data, user_data, idnum,

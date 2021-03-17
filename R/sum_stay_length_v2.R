@@ -9,10 +9,17 @@
 #' @param index_date the name of the variable which is the reference point around which to search
 #' @param wolen washout length in days. Default is one year, `365`
 #' @param ongoing_end_time the time (days) persons were hospitalized at the end of the washout period. Default is three months, `90`
+#' 
 #' @return returns the `.data` tibble extended with three columns: `wo_total_days` which is the total number of days in hospital during the washout period, `wo_end_days` which is the number of days in the hospital at the end of the washout period, and `total_days` which is the total number of days in hospital care.
 #' 
-#' @keywords regstudies, dplyr, lubridate, tidyr
-#' @export
+#' @importFrom dplyr distinct
+#' @importFrom dplyr left_join
+#' @importFrom dplyr group_by
+#' @importFrom dplyr mutate
+#' @importFrom rlang enquo
+#' @importFrom rlang quo_name
+#' @importFrom tidyr replace_na
+#' 
 #' @examples
 #' \dontrun{
 #' d <- regstudies::sample_cohort %>% sum_stay_length_v2(., user_data = regstudies::sample_regdata, 
@@ -24,6 +31,7 @@
 #'                                                       ongoing_end_time = 90)
 #' }
 #'
+#' @rdname sum_stay_length_v2
 #' @export
 #'
 sum_stay_length_v2 <- function(.data, user_data, 
@@ -31,7 +39,6 @@ sum_stay_length_v2 <- function(.data, user_data,
                                adm_date, disc_date, index_date,
                                wolen = 365, ongoing_end_time = 90){
   
-  #user_data <- user_data %>% dplyr::left_join(.data, by = rlang::quo_name(rlang::enquo(idnum)))
   user_data <- user_data %>% dplyr::left_join(.data)
   
   user_data <- user_data %>%

@@ -30,7 +30,6 @@
 #' @importFrom rlang enquo
 #' @importFrom rlang quo_name
 #' @importFrom dplyr select
-#' @importFrom tidyr %>%
 #' @importFrom tidyr drop_na
 #' @importFrom tidyr pivot_wider
 #' 
