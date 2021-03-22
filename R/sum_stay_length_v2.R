@@ -1,7 +1,7 @@
 #' Alternative procedure for counting the days in in-hospital care.
 #'
 #' Can be used for filtering hospitalizations during the wash-out period. The function extends the original data `.data` with a column describing the days in-hospital care during the washout-period, at the end of it and total number of days the person has been in hospital care.
-#' @param .data cohort data containing at least id-numbers and index days
+#' @param .data cohort data set containing information about the persons: ID, gender, and index day.
 #' @param user_data register data
 #' @param idnum name of the column/variable holding the person IDs
 #' @param adm_date the variable name of the date of admission

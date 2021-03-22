@@ -16,7 +16,7 @@ sum_stay_length_v2(
 )
 }
 \arguments{
-\item{.data}{cohort data containing at least id-numbers and index days}
+\item{.data}{cohort data set containing information about the persons: ID, gender, and index day.}
 
 \item{user_data}{register data}
 
