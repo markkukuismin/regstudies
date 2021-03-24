@@ -53,7 +53,7 @@ make_indicators <- function(cohort_data, reg_data,
                            adm_date = NULL, disc_date = NULL, index_date = NULL, time_before = 0, time_after = 0,
                            idnum, codes, diag_tbl, add_zero_class = TRUE){
   
-  if(!is.null(rlang::enquo(adm_date))|!is.null(rlang::enquo(disc_date))|!is.null(rlang::enquo(index_date))){
+  if(!is.null({{adm_date}})|!is.null({{disc_date}})|!is.null({{index_date}})){
     
     tmp <- reg_data %>%
       dplyr::inner_join(cohort_data) %>%
