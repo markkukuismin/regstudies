@@ -53,16 +53,15 @@ make_indicators <- function(cohort_data, reg_data,
                            adm_date = NULL, disc_date = NULL, index_date = NULL, time_before = 0, time_after = 0,
                            idnum, codes, diag_tbl, add_zero_class = TRUE){
   
-  if(!is.null({{adm_date}})|!is.null({{disc_date}})|!is.null({{index_date}})){
+  tmp <- reg_data %>%
+    dplyr::inner_join(cohort_data)
+  
+  ind <- tmp %>% dplyr::select({{adm_date}}, {{disc_date}}, {{index_date}}) %>% ncol()
+  
+  if(ind > 1){
     
-    tmp <- reg_data %>%
-      dplyr::inner_join(cohort_data) %>%
+    tmp <- tmp %>%
       dplyr::filter({{adm_date}} - time_after <= {{index_date}} & {{disc_date}} + time_before >= {{index_date}}) 
-    
-  }else{
-    
-    tmp <- reg_data %>%
-      dplyr::inner_join(cohort_data)
     
   }
   
