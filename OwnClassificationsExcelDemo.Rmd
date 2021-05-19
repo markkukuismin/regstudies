@@ -1,0 +1,347 @@
+---
+title: "How to use own classifications with regstudies and count stay lengths"
+author: "Markku Kuismin"
+date: "Last compiled on `r Sys.setlocale(locale = 'English'); format(Sys.time(), '%d %B %Y')`"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r klippy, echo=FALSE, include=TRUE}
+klippy::klippy(position="right")
+```
+
+##  {.tabset}
+
+### Introduction
+
+The classification of interest are stored in an external (Excel) file which contains strings in SQL LIKE\% -format. We want to extend the data set with dichotomous variables which describe the presence of a disease based on these external classification codes. 
+
+One can use the resulting table to compute simple statistics about the diseases, such as counts and proportions.
+
+<a href="#top">Back to top</a>
+
+### How to create dichotomous variables manually
+
+In these illustrative example we use the built-in demo data sets of $\verb#regstudies#$:
+
+1. $\verb#sample_regdata#$, 
+
+2. $\verb#sample_cohort#$.
+
+First, load some packages,
+
+```{r message=F, warning=F}
+library(readxl)
+library(tidyverse)
+library(lubridate)
+```
+
+In this example we use the example data sets of $\verb#regstudies#$ so we first have to install the package,
+
+```{r message=F, warning=F}
+library(devtools)
+
+#devtools::install_github("markkukuismin/regstudies")
+
+library(regstudies)
+```
+
+The initial idea is to use the function $\verb#%like%#$ to use LIKE\% classifications and function $\verb#left_join0#$ to create the dichotomous variables,
+
+```{r}
+`%like%` <- function(x, pattern){
+  
+  pattern <- ifelse(is.na(pattern),"-",pattern)
+  pattern <- sapply(pattern, function(z){
+    if (!substr(z, 1, 1) == "%") {
+      z <- paste("^", z, sep="")
+    } else {
+      z <- substr(z, 2, nchar(z) )
+    }
+    if (!substr(z, nchar(z), nchar(z)) == "%") {
+      z <- paste(z, "$", sep="")
+    } else {
+      z <- substr(z, 1, nchar(z)-1 )
+    }
+    return(z)
+  })
+  
+  grepl(pattern=paste(pattern, collapse = "|"), x=x)
+}
+
+left_join0 <- function(x,y,...,fill = 0L){
+  z <- left_join(x,y,...)
+  tmp <- setdiff(names(z), names(x))
+  z <- replace_na(z, setNames(as.list(rep(fill, length(tmp))), tmp))
+  z
+}
+```
+
+The external classification codes can be found in the file "taulukot_sairausluokitus.xlsx",
+
+```{r message = F}
+sl <- readxl::read_excel("Data/taulukot_sairausluokitus.xlsx")
+slnim <- sl %>% select(sair=Lyhenne,Sairaus)
+```
+
+Load the built-in cohort and register data from the $\verb#regstudies#$ package and filter persons whose date of discharge ($\verb#disc_date#$ in the data set) was two years prior the index day ($\verb#postingdate#$), and after the admission date ($\verb#adm_date#$),
+
+```{r}
+dgraj <- regstudies::sample_regdata %>%
+  dplyr::inner_join(regstudies::sample_cohort) %>%
+  dplyr::filter(adm_date <= postingdate & disc_date + 365.25*2 >= postingdate)
+```
+
+Run the following loop to create dichotomous variables for each disease,
+
+```{r message=F, warning=F}
+idvar <- 'personid'
+kooste <- regstudies::sample_cohort %>% select(personid)
+
+for(i in 1:nrow(sl)){
+  sairdg <- unlist(strsplit(as.character(sl[i, 'sairdiag']), ", "))
+  sairdgpl <- unlist(strsplit(as.character(sl[i, 'sairdiagpl']), ", "))
+  lyh <- c(idvar, sl[i, 'Lyhenne'])
+  nimi <- sl[i, 'Sairaus']
+  
+  tmpsair <- dgraj %>% 
+    mutate(pois = CODE1 %like% sairdgpl, sair = if_else(pois, 0, as.numeric(CODE1 %like% sairdg))) %>% 
+    group_by_at(idvar) %>%
+    summarise(CODE1 = max(sair))
+  
+  attr(tmpsair[['CODE1']],'label') <- nimi
+  names(tmpsair) <- lyh
+  
+  kooste <- kooste %>%
+    left_join0(tmpsair,fill=0)
+}
+```
+
+After the loop is complete, each disease is defined as an dichotomous variable,
+
+```{r}
+dplyr::tibble(kooste)
+```
+
+One can compute counts and proportions from the data set, e.g, as follows,
+
+```{r}
+osuudet <- kooste %>%
+  summarise_at(
+    vars(-personid),
+    list(~ sum(., na.rm = TRUE), ~ mean(., na.rm = TRUE))
+  )
+
+taul <- osuudet %>% 
+  tidyr::pivot_longer(
+    cols=everything(),
+    names_to=c("Disease","stat"),
+    names_pattern="^(.*)_([s|m][u|e][m|a].*)"
+  ) %>%
+  tidyr::pivot_wider(names_from=stat,values_from=value)
+
+dplyr::tibble(taul)
+```
+
+<a href="#top">Back to top</a>
+
+### Make dichotomous variables with $\verb#regstudies#$
+
+Here we present how to create dichotomous variables for each disease with the functions of $\verb#regstudies#$.
+
+We will go through the process as whole so we will load and filter the same data sets as in the procedures described in the section "How to create dichotomous variables manually".
+
+Load the external classification codes,
+
+```{r}
+sl <- readxl::read_excel("Data/taulukot_sairausluokitus.xlsx")
+```
+
+Function $\verb#regstudies::make_regex#$ can make regular expressions from LIKE\% classification. To apply this function with function $\verb#regstudies::make_indicators#$ (see below) we have to do the following premodifications,
+
+1. Add a $\verb#score#$ variable of all ones into the regular expression table. This variable is used to define each disease of interest as dichotomous variables. In particular, here these variables are coded as zeroes and ones,
+
+2. rename some variables of the regular expression table: 
+
+i) rename the variable holding the regular expressions as "icd10",
+
+ii) rename the variable holding the abbreviations of the diseases as "class" and the variable holding the diseases in plain language as "label".
+
+Here is an example how to make the premodifications,
+
+```{r}
+sl_regexp <- sl %>%
+  regstudies::make_regex(classname = Lyhenne, diagnosis = sairdiag, diagnosis.rm = sairdiagpl) %>% 
+  dplyr::mutate(score = 1) %>%
+  dplyr::rename(icd10 = regex, Lyhenne = label) %>% 
+  dplyr::left_join(sl %>% select(Sairaus, Lyhenne), by = "Lyhenne") %>%
+  dplyr::rename(class = Lyhenne, label = Sairaus)
+```
+
+Although I stressed to add labels to the regular expression table before, labels are not needed to make the dichotomous variables.
+
+Load the built-in cohort and register data from the $\verb#regstudies#$ package and filter persons whose date of discharge ($\verb#disc_date#$ in the data set) was two years prior the index day ($\verb#postingdate#$), and after the admission date ($\verb#adm_date#$),
+
+Instead of looping, we apply the function $\verb#regstudies::make_indicators#$ to create the dichotomous variables.
+
+Function $\verb#regstudies::make_indicators#$ is a multitasking procedure which takes cohort and register data as input data.
+
+We can do all the same as before with the the function $\verb#regstudies::make_indicators#$,
+
+1. filter date intervals within study interval,
+
+2. add dichotomous variables to the data set.
+
+Load the function,
+
+Make a regular expression table from external file. Again, this is done just to show all the steps of the process,
+
+```{r}
+sl <- readxl::read_excel("Data/taulukot_sairausluokitus.xlsx")
+```
+
+```{r}
+sl_regexp <- sl %>%
+  regstudies::make_regex(classname = Lyhenne, diagnosis = sairdiag, diagnosis.rm = sairdiagpl) %>% 
+  dplyr::mutate(score = 1) %>%
+  dplyr::rename(icd10 = regex, Lyhenne = label) %>% 
+  dplyr::left_join(sl %>% select(Sairaus, Lyhenne), by = "Lyhenne") %>%
+  dplyr::rename(class = Lyhenne, label = Sairaus)
+```
+
+We filter persons whose date of discharge is two years (parameter $\verb#time_before#$) prior the index day, and add dichotomous variables to the data set - also diseases which have zero frequency (parameter $\verb#add_zero_class#$ of the function),
+
+```{r}
+test <- regstudies::make_indicators(cohort_data = regstudies::sample_cohort, 
+                                    reg_data = regstudies::sample_regdata,
+                                    adm_date = adm_date, disc_date = disc_date, index_date = postingdate,
+                                    time_before = 2*365.25, time_after = 0,
+                                    idnum = personid, codes = CODE1, diag_tbl = sl_regexp, add_zero_class = T)
+```
+
+The resulting tibble data frame is the same as the one constructed by looping,
+
+```{r}
+dplyr::tibble(test)
+```
+
+```{r}
+dplyr::all_equal(kooste, test %>% dplyr::select(-postingdate, -gender), convert = T)
+```
+
+Compute the counts and proportions,
+
+```{r message = F}
+tidyr::pivot_longer(test, cols = colnames(test)[-c(1:3)]) %>%
+  dplyr::group_by(name) %>% 
+  dplyr::summarise(sum = sum(value), '%' = mean(value)*100) %>%
+  dplyr::filter(sum != 0)
+```
+
+<p>&nbsp;</p>
+
+#### Use built-in classification tables
+
+<p>&nbsp;</p>
+
+In addition to external classification file, one can also use the built-in classification tables of $\verb#regstudies#$ while using the function $\verb#regstudies::make_indicators#$ just by setting the parameter $\verb#diag_tbl#$ as $\verb#charlson#$ or $\verb#elixhauser#$,
+
+```{r}
+test.charlson <- regstudies::make_indicators(cohort_data = regstudies::sample_cohort, 
+                                             reg_data = regstudies::sample_regdata,
+                                             adm_date = adm_date, disc_date = disc_date, 
+                                             index_date = postingdate,
+                                             time_before = 2*365.25, time_after = 0,
+                                             idnum = personid, codes = CODE1, diag_tbl = charlson, 
+                                             add_zero_class = T)
+```
+The dichotomous variables added to the register data are computed according to the table $\verb#regstudies::charlson_classes#$,
+
+```{r}
+dplyr::tibble(test.charlson)
+```
+
+<a href="#top">Back to top</a>
+
+### Count the days in hospital with $\verb#regstudies::sum_stay_length#$
+
+The function $\verb#regstudies::sum_stay_length#$ can be used to compute the number of hospital days from the index day during the washout period. The function also computes the days persons were hospitalized at a specific time length at the end of the washout period.
+
+For example, compute the number of hospital days during last two years (730 days) from the $\verb#postingdate#$ of the example register data found in $\verb#regstudies#$ package. Moreover, compute also the number of hospital days during 60 days at the end of the two year washout period,
+
+```{r}
+Hosp.df <- regstudies::sample_cohort %>% 
+  regstudies::sum_stay_length(., regstudies::sample_regdata,
+                              idnum = personid,
+                              adm_date = adm_date, 
+                              disc_date = disc_date, 
+                              index_date = postingdate, 
+                              wolen = 2*365, 
+                              ongoing_end_time = 60)
+```
+
+The tibble data frame is the cohort data ($\verb#sample_cohort#$) extended with two columns: 
+
+* $\verb#wo_total_time_hosp#$ which is the total number of hospitalization days during the two year washout period,
+
+* $\verb#wo_end_time_hosp#$ which is the number of days during the last 60 days of the two year washout period,
+
+```{r}
+dplyr::tibble(Hosp.df)
+```
+
+This data set is easy to join with the data frame containing dichotomous variables for each disease,
+
+```{r}
+test <- test %>% 
+  dplyr::left_join(Hosp.df %>% dplyr::select(-gender, -postingdate), by = "personid")
+
+dplyr::tibble(test)
+```
+
+Just look at the last columns of the table,
+
+```{r}
+dplyr::tibble(test %>% select(last_col(offset=(8-1):0, everything())))
+```
+
+<p>&nbsp;</p>
+
+#### Alternative procedure
+
+<p>&nbsp;</p>
+
+Package $\verb#regstudies#$ also includes alternative procedure to compute the hospitalization days. Moreover, this procedure also computes the total number of days persons have been in hospital care.
+
+This is a greedy procedure and it will take some time it to finish,
+
+```{r}
+Hosp.df.1 <- regstudies::sample_cohort %>% sum_stay_length_v2(., user_data = regstudies::sample_regdata, 
+                                                              idnum = personid, 
+                                                              adm_date = adm_date, 
+                                                              disc_date = disc_date,
+                                                              index_date = postingdate,
+                                                              wolen = 2*365,
+                                                              ongoing_end_time = 60
+                                                              )
+```
+
+This returns $\verb#regstudies::sample_cohort#$ extended with three new columns: 
+
+* $\verb#wo_total_days#$ describes the number of days persons were hospitalized during the washout period,
+
+* $\verb#wo_end_days#$ shows the number of days person was hospitalized during the end of the washout period,
+
+* $\verb#total_days#$ is the total number of days person has been in hospital care,
+
+```{r}
+dplyr::tibble(Hosp.df.1)
+```
+
+Note: Although functions $\verb#sum_stay_length#$ and $\verb#sum_stay_length_v2#$ join data sets using $\verb#dplyr::left_join(.data, user_data)#$ without "$\verb#by=.#$" argument, one should be careful while joining data tables containing columns with identical names.
+
+<a href="#top">Back to top</a>
